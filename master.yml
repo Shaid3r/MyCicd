@@ -1,10 +1,16 @@
 ---
 - hosts: localhost
   connection: local
+  pre_tasks:
+  - name: Set environment variables
+    lineinfile:
+      path: /etc/environment
+      regexp: "^{{ item.name }}="
+      line: "{{ item.name }}={{ item.value }}"
+    with_items:
+      - {name: 'CASC_JENKINS_CONFIG', value: '/home/admin/MyCicd/jsac/main.yml'}
+    become: yes
   roles:
-    - role: geerlingguy.java
-      java_packages:
-        - java-1.8.0-openjdk
-      become: yes
     - role: geerlingguy.jenkins
+      jenkins_plugins: ["configuration-as-code", "git"]
       become: yes

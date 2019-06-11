@@ -1,0 +1,4 @@
+jenkins:
+  systemMessage: "Welcome"
+
+  # job-dsl-plugin
