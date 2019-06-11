@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  connection: local
+  roles:
+    - role: geerlingguy.java
+      java_packages:
+        - java-1.8.0-openjdk
+      become: yes
+    - role: geerlingguy.jenkins
+      become: yes
