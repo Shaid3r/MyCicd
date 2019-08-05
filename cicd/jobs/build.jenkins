@@ -1,0 +1,31 @@
+#!/usr/bin/env groovy
+
+folder('master')
+pipelineJob('master/app') {
+    displayName('Deploy app')
+
+    logRotator {
+        numToKeep(10)
+        daysToKeep(30)
+    }
+
+    configure { project ->
+        project / 'properties' / 'org.jenkinsci.plugins.workflow.job.properties.DurabilityHintJobProperty' {
+            hint('PERFORMANCE_OPTIMIZED')
+        }
+    }
+
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url('https://github.com/Shaid3r/MyCicd.git')
+                    }
+                    branches('*/master')
+                }
+            }
+            scriptPath('cicd/pipelines/app.jenkins')
+        }
+    }
+}

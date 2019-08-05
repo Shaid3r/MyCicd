@@ -1,0 +1,56 @@
+#!/usr/bin/env groovy
+
+def label = "build-jenkins-operator-${UUID.randomUUID().toString()}"
+// def home = "/home/jenkins"
+// def workspace = "${home}/workspace/build-jenkins-operator"
+// def workdir = "${workspace}/src/github.com/jenkinsci/kubernetes-operator/"
+
+// K8S_AUTH_HOST
+// K8S_AUTH_API_KEY
+//   - name: jnlp
+//     image: docker-registry-svc.mgm-docker.svc.cluster.local:5000/myorg/slave-ansible
+//     args: ['\$(JENKINS_SECRET)', '\$(JENKINS_NAME)']
+podTemplate(
+    label: label,
+    yaml: """
+kind: Pod
+metadata:
+  name: kaniko
+spec:
+  containers:
+#  - name: kaniko
+#    image: gcr.io/kaniko-project/executor:debug-539ddefcae3fd6b411a95982a830d987f4214251
+#    command:
+#    - /busybox/cat
+#    tty: true
+  - name: python
+    image: jfloff/alpine-python:3.6-slim
+    command:
+    - /bin/cat
+    tty: true
+""") {
+    node(label) {
+        stage('Checkout repository') {
+            git 'https://github.com/Shaid3r/MyKube.git'
+        }
+        // stage('Build app') {
+        //     container(name: 'kaniko', shell: '/busybox/sh') {
+        //         sh '''#!/busybox/sh
+        //         cd deployments/APP
+        //         /kaniko/executor --dockerfile `pwd`/docker-context/Dockerfile --context '`pwd`/docker-context' --insecure --skip-tls-verify \
+        //             --cache=true --destination=docker-registry-svc.mgm-docker.svc.cluster.local:5000/myorg/myimage
+        //         '''
+        //     }
+        // }
+        stage('Deploy app') {
+            container(name: 'python') {
+                sh '''apk add build-base libffi-dev openssl-dev openssl-dev && rm -rf /var/cache/apk/*'''
+                sh 'cd ../.. && ls'
+                sh 'python -m pip install -r requirements.txt'
+                withCredentials([file(credentialsId: 'kube-config', variable: 'K8S_AUTH_KUBECONFIG')]) {
+                    sh 'ansible-playbook -v ./deploy.yml'
+                }
+            }
+        }
+    }
+}
